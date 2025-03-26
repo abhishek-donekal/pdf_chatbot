@@ -53,10 +53,10 @@ if openai_api_key and mongo_uri and uploaded_file:
         # Chat UI
         st.subheader("💬 Chat with the Document")
 
-        # Display Chat History
+        # Display Chat History Correctly
         for chat in st.session_state.chat_history:
-            role = "👤" if chat["role"] == "user" else "🤖"
-            st.markdown(f"**{role} {chat['role'].capitalize()}**: {chat['content']}", unsafe_allow_html=True)
+            role = "👤 User" if chat["role"] == "user" else "🤖 Assistant"
+            st.markdown(f"**{role}**: {chat['content']}", unsafe_allow_html=True)
 
         # User Input
         user_query = st.chat_input("Ask me anything about this document...")
@@ -66,11 +66,16 @@ if openai_api_key and mongo_uri and uploaded_file:
                 st.warning("🛑 Chatbot session ended.")
                 st.session_state.chat_history = []  # Clear history
             else:
-                # Add User Query to History
+                # ✅ Store User Message First
                 st.session_state.chat_history.append({"role": "user", "content": user_query})
 
                 # System Prompt for AI
-                system_prompt = f"You are an AI assistant answering questions about this document:\n{pdf_text[:3000]}..."
+                system_prompt = f"""
+                You are an AI assistant answering questions about this document.
+                DO NOT reveal any personal details such as name, birth date, address, or contact information.
+                If the user asks for such details, politely respond that you cannot provide that information.
+                Here is the document content:\n{pdf_text[:3000]}...
+                """
 
                 # AI Response
                 response = client.chat.completions.create(
@@ -81,5 +86,6 @@ if openai_api_key and mongo_uri and uploaded_file:
                 bot_reply = response.choices[0].message.content
                 st.session_state.chat_history.append({"role": "assistant", "content": bot_reply})
 
-                # Display AI Response
+                # ✅ Show User Message + AI Reply
+                st.markdown(f"**👤 User**: {user_query}", unsafe_allow_html=True)
                 st.markdown(f"**🤖 Assistant**: {bot_reply}", unsafe_allow_html=True)
