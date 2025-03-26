@@ -1,0 +1,4 @@
+pymongo
+openai
+PyPDF2
+streamlit
